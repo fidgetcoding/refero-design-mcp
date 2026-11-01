@@ -5,7 +5,13 @@
  * Author: Nate Davidovich (Lorecraft LLC)
  */
 import type { ColorScheme } from "../types.js";
-import { applyFilters, ensureCatalog, toShorthand, type StyleShorthand } from "./shared.js";
+import {
+  applyFilters,
+  ensureCatalog,
+  toShorthand,
+  type StaleNotice,
+  type StyleShorthand,
+} from "./shared.js";
 
 export interface ListArgs {
   theme?: unknown;
@@ -20,6 +26,8 @@ export interface ListResult {
   count: number;
   total: number;
   styles: StyleShorthand[];
+  /** Set when these results came from an out-of-date local copy. */
+  cache?: StaleNotice;
 }
 
 const DEFAULT_LIMIT = 20;
@@ -69,7 +77,7 @@ export async function handleList(args: ListArgs): Promise<ListResult> {
   const page = asPage(args.page);
   const limit = asLimit(args.limit);
 
-  const catalog = await ensureCatalog();
+  const { styles: catalog, stale } = await ensureCatalog();
   const filtered = applyFilters(catalog, { theme }, undefined);
 
   const candidates =
@@ -101,5 +109,6 @@ export async function handleList(args: ListArgs): Promise<ListResult> {
     count: slice.length,
     total,
     styles: slice.map((s) => toShorthand(s)),
+    ...(stale ? { cache: stale } : {}),
   };
 }

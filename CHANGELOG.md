@@ -4,6 +4,26 @@ All notable changes to `fidgetcoding-refero-mcp` are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **Search failed outright when Refero refused the request, even with a good local catalog.** Refero now answers this client's `/api/styles` calls with HTTP 403, and any failed refresh threw the error away with the cache. A failed refresh now serves the last good copy, with a `cache` field on the result saying "Cached, may be stale", the date, and the reason. Applies to `refero_search`, `refero_list`, `refero_facets`, `refero_get`, and `refero_design_md`.
+- **Clear errors when there is nothing to fall back on.** No cache, a style whose details were never fetched, `refero_similar`, and `refero_refresh` each say what failed and point at Refero's official MCP.
+- **A 200 with an empty catalog could wipe a good local copy.** It now counts as a failed fetch.
+
+### Added
+
+- `tests/live.test.ts`, the one test that calls the real Refero endpoint. Every other test fakes `fetch`, which is how the suite stayed green through the 403. It fails if the endpoint's state stops matching the README, and skips on `REFERO_SKIP_LIVE_TEST=1`, no network, a 5xx, or rate limiting.
+
+### Changed
+
+- README: states that the upstream is blocked, what still works, and that Refero's official MCP is the supported route.
+
+### Security
+
+- `openai` (optional, embeddings only) from `^4.60.0` to `^6.49.0`, because 4.x pins `zod` to a version with a high advisory. This package only calls `embeddings.create`, whose call shape is unchanged. Plus a lockfile refresh of transitive dependencies. `npm audit --omit=dev` now reports 0.
+
 ## [0.2.0] — 2026-08-04
 
 ### Added

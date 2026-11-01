@@ -17,7 +17,7 @@
  * Author: Nate Davidovich (Lorecraft LLC)
  */
 import type { ColorScheme, StyleListItem } from "../types.js";
-import { applyFilters, ensureCatalog } from "./shared.js";
+import { applyFilters, ensureCatalog, type StaleNotice } from "./shared.js";
 
 export interface FacetsArgs {
   theme?: unknown;
@@ -36,6 +36,8 @@ export interface FacetsResult {
   colors: Array<FacetCount>;
   /** How to turn these facets into a follow-up call. */
   usage: string;
+  /** Set when these counts came from an out-of-date local copy. */
+  cache?: StaleNotice;
 }
 
 const DEFAULT_LIMIT = 25;
@@ -83,7 +85,10 @@ export function rankFacet(values: Iterable<string>, limit: number): FacetCount[]
 }
 
 /** Pure facet extraction — exported for tests and reuse. */
-export function computeFacets(styles: StyleListItem[], limit: number): Omit<FacetsResult, "usage"> {
+export function computeFacets(
+  styles: StyleListItem[],
+  limit: number,
+): Omit<FacetsResult, "usage" | "cache"> {
   const fonts: string[] = [];
   const colors: string[] = [];
   const themes: string[] = [];
@@ -106,12 +111,13 @@ export async function handleFacets(args: FacetsArgs): Promise<FacetsResult> {
   const theme = asTheme(args.theme);
   const limit = asLimit(args.limit);
 
-  const catalog = await ensureCatalog();
+  const { styles: catalog, stale } = await ensureCatalog();
   const scoped = applyFilters(catalog, { theme }, undefined);
 
   return {
     ...computeFacets(scoped, limit),
     usage:
       "Feed any font or color value back into refero_search as the query — the search index covers font stacks and color names. Use theme with refero_list to narrow further.",
+    ...(stale ? { cache: stale } : {}),
   };
 }

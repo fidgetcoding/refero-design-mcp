@@ -6,7 +6,14 @@
  */
 import { getById } from "../refero.js";
 import { resolveStyle } from "../resolver.js";
-import { ensureCatalog, toShorthand, type StyleShorthand } from "./shared.js";
+import {
+  OFFICIAL_MCP_HINT,
+  ReferoUnavailableError,
+  describeFailure,
+  ensureCatalog,
+  toShorthand,
+  type StyleShorthand,
+} from "./shared.js";
 import { IdentifierNotFoundError } from "./get.js";
 
 export interface SimilarArgs {
@@ -45,7 +52,7 @@ export async function handleSimilar(args: SimilarArgs): Promise<SimilarResult> {
   const identifier = asIdentifier(args.identifier);
   const limit = asLimit(args.limit);
 
-  const catalog = await ensureCatalog();
+  const { styles: catalog } = await ensureCatalog();
   const match = resolveStyle(identifier, catalog);
   if (!match) {
     throw new IdentifierNotFoundError(
@@ -57,7 +64,15 @@ export async function handleSimilar(args: SimilarArgs): Promise<SimilarResult> {
   // Always fetch fresh detail — the .similar bucket is computed server-side
   // and isn't stored alongside the cached FullStyle. Refresh is cheap (one
   // request, fully cached afterwards via ensureStyle if needed).
-  const detail = await getById(match.id);
+  let detail: Awaited<ReturnType<typeof getById>>;
+  try {
+    detail = await getById(match.id);
+  } catch (err) {
+    throw new ReferoUnavailableError(
+      `refero_similar needs Refero's live recommendations, which are never cached. ` +
+        `${describeFailure(err)}. Try refero_search over the local catalog. ${OFFICIAL_MCP_HINT}`,
+    );
+  }
   const similar = (detail.similar ?? []).slice(0, limit);
 
   return {

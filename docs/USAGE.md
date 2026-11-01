@@ -1,5 +1,7 @@
 # refero-mcp — usage recipes
 
+**Refero currently refuses this client, so these work only from a local cache. See the README's Status section.**
+
 Practical examples for the six tools, written the way you'd actually talk to Claude. None of this requires you to know the tool names — Claude picks them. The names are listed only so you can read the trace if you want to.
 
 ---

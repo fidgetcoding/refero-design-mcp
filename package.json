@@ -52,7 +52,7 @@
     "@rolldown/binding-linux-arm64-gnu": "*",
     "@rolldown/binding-linux-x64-gnu": "*",
     "@rolldown/binding-win32-x64-msvc": "*",
-    "openai": "^4.60.0"
+    "openai": "^6.49.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

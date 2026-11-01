@@ -23,6 +23,7 @@
 
 | Link | Section | What it does | Time |
 |---|---|---|---|
+| [Status](#status-refero-is-refusing-this-client) | Read first | Refero blocks this client today | ~1 min |
 | [What this is](#what-this-is) | Overview | The catalog, the gap, the wrap | ~1 min |
 | [Quick install](#quick-install) | Setup | One line into Claude Code | ~1 min |
 | [Usage](#usage) | Talk to it | Plain-English prompts | ~2 min |
@@ -31,6 +32,34 @@
 | [How it works](#how-it-works) | Reference | Cache, embeddings, DESIGN.md generation | ~1 min |
 | [Troubleshooting](#troubleshooting) | Reference | The likely first three problems | ~1 min |
 | [License + Author](#license) | Meta | MIT | — |
+
+---
+
+## Status: Refero is refusing this client
+
+> [!WARNING]
+> **New installs can't search right now.** As of 2026-11-01, `GET styles.refero.design/api/styles` answers this package with HTTP 403 and `{"error":"Please refresh the page and try again."}`. The last successful catalog fetch I have on record is 2026-08-04.
+
+What that means in practice:
+
+| If you have... | What works |
+|---|---|
+| No local cache | Nothing. Every tool returns a clear error saying why. |
+| A cached catalog | `refero_search`, `refero_list`, and `refero_facets` run on that copy. Every result carries a `cache` field saying "Cached, may be stale" with the date. |
+| A cached style | `refero_get` and `refero_design_md` work for styles whose full details you fetched before. Others return a clear error. |
+| Either | `refero_similar` and `refero_refresh` need the live endpoint, so they return a clear error. A failed refresh leaves your cache alone. |
+
+This package always read an undocumented endpoint, and it won't try to get around the block. Refero's [`robots.txt`](https://styles.refero.design/robots.txt) disallows `/api/`, and its [Terms of Use](https://doc.refero.design/legal/terms-of-use) (updated August 3, 2026) rule out automated extraction outside documented features and bypassing access controls.
+
+**For live data, use [Refero's official MCP](https://refero.design/mcp).** It covers style search and full style guidance (colors, typography, spacing, do/don't rules), plus sites, apps, screens, and flows. It requires a paid Refero plan (Pro, Team, or Lifetime):
+
+```bash
+claude mcp add --transport http refero https://api.refero.design/mcp --header "Authorization: Bearer <token>"
+```
+
+`tests/live.test.ts` calls the real endpoint and fails if this section stops being true, in either direction.
+
+<p align="right"><a href="#top">↑ back to top</a></p>
 
 ---
 
@@ -166,7 +195,7 @@ A copy-paste `.env.example` ships in the repo root.
 
 ## How it works
 
-There is no public Refero API doc as of writing — the shape was mapped empirically against the live site. The full breakdown is in [`docs/api-surface.md`](docs/api-surface.md) so future-me doesn't re-discover it.
+This describes the design, which depends on an endpoint Refero now refuses (see [Status](#status-refero-is-refusing-this-client)). That endpoint was never publicly documented: the shape was mapped empirically against the live site, and the breakdown is in [`docs/api-surface.md`](docs/api-surface.md).
 
 - **Local catalog mirror.** Refero exposes `?page=N` pagination but silently ignores `?search=`, `?q=`, and `?colorScheme=`. So this MCP walks the pages once, mirrors them locally under `REFERO_CACHE_DIR`, and runs all filtering and ranking client-side.
 - **Vibe search via `northStar`.** Every Refero style ships with a one-line poetic summary called `northStar`. With `OPENAI_API_KEY` set, the MCP embeds those summaries with `text-embedding-3-small` and ranks by cosine similarity to your query. Without a key, it falls back to keyword scoring on `northStar` + tags + site name.
@@ -178,7 +207,9 @@ There is no public Refero API doc as of writing — the shape was mapped empiric
 
 ## Troubleshooting
 
-**"No styles found" / catalog feels empty.** First-run hits a cold cache. Ask Claude to *"refresh the Refero catalog"* once — it walks the ~10 pages with a polite 250ms gap and writes them to `REFERO_CACHE_DIR`. After that, search is instant.
+**"The Refero catalog is unavailable and there is no local copy."** Refero is refusing this client and you have no cache to fall back on. See [Status](#status-refero-is-refusing-this-client). Refreshing won't help.
+
+**Results say "Cached, may be stale".** The live refresh failed, so you're getting your last good copy. The note gives its date and the reason.
 
 **Search results feel keyword-y rather than semantic.** You probably don't have `OPENAI_API_KEY` set. Add it to your MCP config and restart, or lean harder on the catalog's vocabulary (industries plus tags like `editorial`, `brutalist`, `glass`).
 

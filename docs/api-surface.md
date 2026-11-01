@@ -1,5 +1,7 @@
 # styles.refero.design — empirical API surface
 
+> **Historical.** As of 2026-11-01 these endpoints answer this client with HTTP 403, and `robots.txt` now disallows `/api/`. Kept as a record of what the client was built against. See the README's Status section.
+
 > **Date of investigation:** 2026-05-01
 > **Tested against:** the live production site at `https://styles.refero.design` (beta).
 > **Status:** No public schema, no docs page, no sitemap, no `robots.txt`. Everything below was derived by poking the live `/api/styles` endpoints with `curl`. Treat this file as the source of truth for the HTTP contract until Refero ships official docs.

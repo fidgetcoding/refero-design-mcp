@@ -5,12 +5,13 @@
  * Author: Nate Davidovich (Lorecraft LLC)
  */
 import { resolveStyle } from "../resolver.js";
-import type { FullStyle } from "../types.js";
 import {
   ensureCatalog,
   ensureStyle,
   toFullStyleShorthand,
   type FullStyleShorthand,
+  type StaleNotice,
+  type StyleLoad,
 } from "./shared.js";
 
 export interface GetArgs {
@@ -29,10 +30,8 @@ function asIdentifier(value: unknown): string {
 }
 
 /** Internal helper used by other tools so they don't repeat the resolution. */
-export async function resolveAndFetch(
-  identifier: string,
-): Promise<FullStyle> {
-  const catalog = await ensureCatalog();
+export async function resolveAndFetch(identifier: string): Promise<StyleLoad> {
+  const { styles: catalog, stale: staleCatalog } = await ensureCatalog();
   const match = resolveStyle(identifier, catalog);
   if (!match) {
     throw new IdentifierNotFoundError(
@@ -41,11 +40,15 @@ export async function resolveAndFetch(
         `Run refero_search or refero_refresh to update the local catalog.`,
     );
   }
-  return ensureStyle(match.id);
+  const { style, stale: staleStyle } = await ensureStyle(match.id);
+  const stale = staleStyle ?? staleCatalog;
+  return stale ? { style, stale } : { style };
 }
 
-export async function handleGet(args: GetArgs): Promise<FullStyleShorthand> {
+export async function handleGet(
+  args: GetArgs,
+): Promise<FullStyleShorthand & { cache?: StaleNotice }> {
   const identifier = asIdentifier(args.identifier);
-  const full = await resolveAndFetch(identifier);
-  return toFullStyleShorthand(full);
+  const { style, stale } = await resolveAndFetch(identifier);
+  return { ...toFullStyleShorthand(style), ...(stale ? { cache: stale } : {}) };
 }

@@ -10,6 +10,7 @@ import {
   ensureCatalog,
   searchText,
   toShorthand,
+  type StaleNotice,
   type StyleShorthand,
 } from "./shared.js";
 
@@ -25,6 +26,8 @@ export interface SearchResult {
   scorer: "openai" | "keyword";
   count: number;
   results: StyleShorthand[];
+  /** Set when these results came from an out-of-date local copy. */
+  cache?: StaleNotice;
 }
 
 const DEFAULT_LIMIT = 10;
@@ -73,7 +76,8 @@ export async function handleSearch(args: SearchArgs): Promise<SearchResult> {
   const tags = asTags(args.tags);
   const limit = asLimit(args.limit);
 
-  const catalog = await ensureCatalog();
+  const { styles: catalog, stale } = await ensureCatalog();
+  const cache = stale ? { cache: stale } : {};
 
   // Tag filtering would require detail data which we don't have for every
   // item. If the caller asked for tags, we still filter best-effort using
@@ -92,7 +96,7 @@ export async function handleSearch(args: SearchArgs): Promise<SearchResult> {
 
   if (candidates.length === 0) {
     const scorerName = (await getScorer()).name;
-    return { query, scorer: scorerName, count: 0, results: [] };
+    return { query, scorer: scorerName, count: 0, results: [], ...cache };
   }
 
   const scorer = await getScorer();
@@ -115,5 +119,6 @@ export async function handleSearch(args: SearchArgs): Promise<SearchResult> {
     scorer: scorer.name,
     count: ranked.length,
     results: ranked,
+    ...cache,
   };
 }

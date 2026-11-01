@@ -9,6 +9,7 @@ import { join } from "node:path";
 import { renderDesignMd } from "../design-md.js";
 import { resolveProjectDir } from "../path-safety.js";
 import { resolveAndFetch } from "./get.js";
+import type { StaleNotice } from "./shared.js";
 
 export interface DesignMdArgs {
   identifier?: unknown;
@@ -21,6 +22,8 @@ export interface DesignMdResult {
   styleId: string;
   markdown: string;
   savedTo?: string;
+  /** Set when this was rendered from an out-of-date local copy. */
+  cache?: StaleNotice;
 }
 
 function asIdentifier(value: unknown): string {
@@ -41,8 +44,9 @@ export async function handleDesignMd(args: DesignMdArgs): Promise<DesignMdResult
   const identifier = asIdentifier(args.identifier);
   const projectName = asProjectName(args.save_to_project);
 
-  const full = await resolveAndFetch(identifier);
+  const { style: full, stale } = await resolveAndFetch(identifier);
   const markdown = renderDesignMd(full);
+  const cache = stale ? { cache: stale } : {};
 
   if (!projectName) {
     return {
@@ -50,6 +54,7 @@ export async function handleDesignMd(args: DesignMdArgs): Promise<DesignMdResult
       siteName: full.siteName,
       styleId: full.id,
       markdown,
+      ...cache,
     };
   }
 
@@ -66,5 +71,6 @@ export async function handleDesignMd(args: DesignMdArgs): Promise<DesignMdResult
     styleId: full.id,
     markdown,
     savedTo: targetPath,
+    ...cache,
   };
 }
