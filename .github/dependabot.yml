@@ -7,9 +7,16 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: "deps"
+    ignore:
+      # Major jumps are migrations to plan, not bot PRs to merge.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: weekly
     commit-message:
       prefix: "ci"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
