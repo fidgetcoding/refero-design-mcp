@@ -1,7 +1,7 @@
 {
   "name": "fidgetcoding-refero-mcp",
   "version": "0.2.0",
-  "description": "Bullet-proof MCP for styles.refero.design — natural-language search across the curated DESIGN.md library.",
+  "description": "MCP server for searching Refero Styles in plain English and generating DESIGN.md files. Refero currently blocks this client (HTTP 403), so it works only from a local cache; see the README.",
   "type": "module",
   "bin": {
     "refero-mcp": "./dist/cli.js"

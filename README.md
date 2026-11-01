@@ -57,7 +57,7 @@ This package always read an undocumented endpoint, and it won't try to get aroun
 claude mcp add --transport http refero https://api.refero.design/mcp --header "Authorization: Bearer <token>"
 ```
 
-`tests/live.test.ts` calls the real endpoint and fails if this section stops being true, in either direction.
+To check whether this section is still true, run `REFERO_LIVE_TEST=1 npx vitest run tests/live.test.ts`. It sends one request to the real endpoint and fails if the state has changed, in either direction. Because `robots.txt` disallows that path, the test is manual only: it's skipped by default and never runs in CI, so CI won't notice if the state changes.
 
 <p align="right"><a href="#top">↑ back to top</a></p>
 

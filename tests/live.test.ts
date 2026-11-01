@@ -8,8 +8,14 @@
  * fails: a working endpoint that stops working, or a blocked one that reopens or
  * starts failing differently.
  *
- * Skipped with REFERO_SKIP_LIVE_TEST=1, and skipped automatically when the result
- * says nothing about Refero's policy: no network, a 5xx, or rate limiting.
+ * Manual only, because Refero's robots.txt disallows /api/. It stays skipped and
+ * sends nothing unless you run it yourself with REFERO_LIVE_TEST=1, and it never
+ * runs in CI, even with that set:
+ *
+ *   REFERO_LIVE_TEST=1 npx vitest run tests/live.test.ts
+ *
+ * It also skips when the result says nothing about Refero's policy: no network,
+ * a 5xx, or rate limiting.
  *
  * Author: Nate Davidovich (Lorecraft LLC)
  */
@@ -21,10 +27,10 @@ import { ReferoApiError, type StylesListResponse } from "../src/types.js";
 /** Keep in sync with the README's Status section. Last checked 2026-11-01. */
 const EXPECTED: "blocked" | "open" = "blocked";
 
-describe("live Refero endpoint", () => {
-  it(`is ${EXPECTED}, as the README says`, { timeout: 60_000 }, async (ctx) => {
-    if (process.env.REFERO_SKIP_LIVE_TEST === "1") ctx.skip();
+const ENABLED = process.env.REFERO_LIVE_TEST === "1" && !process.env.CI;
 
+describe("live Refero endpoint", () => {
+  it.runIf(ENABLED)(`is ${EXPECTED}, as the README says`, { timeout: 60_000 }, async (ctx) => {
     let page: StylesListResponse | null = null;
     let refusedWith: number | null = null;
     try {

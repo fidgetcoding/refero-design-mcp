@@ -14,11 +14,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- `tests/live.test.ts`, the one test that calls the real Refero endpoint. Every other test fakes `fetch`, which is how the suite stayed green through the 403. It fails if the endpoint's state stops matching the README, and skips on `REFERO_SKIP_LIVE_TEST=1`, no network, a 5xx, or rate limiting.
+- `tests/live.test.ts`, the one test that calls the real Refero endpoint. Every other test fakes `fetch`, which is how the suite stayed green through the 403. It fails if the endpoint's state stops matching the README. Manual only, because `robots.txt` disallows the path: it needs `REFERO_LIVE_TEST=1` and never runs in CI. It also skips on no network, a 5xx, or rate limiting.
 
 ### Changed
 
 - README: states that the upstream is blocked, what still works, and that Refero's official MCP is the supported route.
+- `package.json` description now says what the package does and that Refero currently blocks it.
 
 ### Security
 
