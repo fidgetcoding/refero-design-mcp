@@ -55,7 +55,7 @@
     "openai": "^6.49.0"
   },
   "devDependencies": {
-    "@types/node": "^20.14.0",
+    "@types/node": "^20.19.43",
     "@vitest/coverage-v8": "^4.1.12",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
